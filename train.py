@@ -11,6 +11,7 @@ from model.model import DiabetesPredictor
 import torch 
 import torch.nn as nn
 import torch.optim as optim
+import torch.onnx
 
 # STEP 1: Load + Preprocess
 df = load_and_prepare_data("data/diabetes_dataset.csv")
@@ -64,3 +65,17 @@ with torch.no_grad():  # Don't track gradients during evaluation
     accuracy = correct / total
 
     print(f"\n✅ Test Accuracy: {accuracy * 100:.2f}%")
+
+
+dummy_input = torch.randn(1, X_train.shape[1])
+torch.onnx.export(
+    model,
+    dummy_input,
+    "diabetes_model.onnx",
+    input_names=["input"],
+    output_names=["output"],
+    dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}},
+    opset_version=11
+)
+
+print("ONNX model exported.")
